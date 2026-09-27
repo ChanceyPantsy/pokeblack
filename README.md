@@ -2,7 +2,7 @@
 
 [![Progress]][decomp.dev] [![Report]][actions]
 
-[![Discord](https://shields.io)](https://discord.gg/x9YSZECNVV)
+Discord: https://discord.gg/x9YSZECNVV
 
 
 This is a decompilation of Pokémon Black (NDS).
