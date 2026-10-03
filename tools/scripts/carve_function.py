@@ -139,6 +139,13 @@ def main():
         out.append('')
         out.extend(f"\t.extern {sym}" for sym in wanted)
         out.append('')
+        # a half with no function in it (a bare literal pool) has no func_start
+        # for gen_force_active.py to anchor on, so give it a .global or the
+        # linker places the object wherever it likes instead of in link order
+        if body and not any(FUNC_START_RE.match(line) for line in body):
+            anchor = LABEL_RE.match(next(l for l in body if LABEL_RE.match(l)))
+            out.append(f"\t.global {anchor.group(1)}")
+            out.append('')
         out.append('\t.text')
         return out
 

@@ -149,6 +149,9 @@ class TestLiteralPoolPreserved(CarveTestCase):
         pool = read('asm/unk_02008564.s')
         self.assertIn('0x80, 0x7E, 0x70, 0x47', pool)
         self.assertNotIn('FUN_02008560:', pool)
+        # gen_force_active.py anchors an object by a global symbol; a pool has
+        # no func_start, so without this the linker relocates it
+        self.assertIn('\t.global _02008564', pool)
         self.assertEqual(objs, [
             'asm/unk_02008554.o',
             'src/unk_02008560.o',
