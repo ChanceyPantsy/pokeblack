@@ -9,13 +9,6 @@
 	.extern FUN_02087C88
 
 	.text
-
-	thumb_func_start FUN_02008850
-FUN_02008850: ; 0x02008850
-	add r0, #0x70
-	bx lr
-	thumb_func_end FUN_02008850
-
 	thumb_func_start FUN_02008854
 FUN_02008854: ; 0x02008854
 	ldr r3, _0200885C ; =FUN_020071CC
@@ -545,4 +538,3 @@ _02008EEC: .word 0x0209DF0C
 _02008EF0: .word 0x0209DF08
 _02008EF4: .word 0x0000FFFF
 	thumb_func_end FUN_02008eb8
-
