@@ -289,6 +289,33 @@ structs are still unnamed; no symbol was renamed.
 Remaining known-hard cases: `FUN_0200846C` (stack frame + `Heap_AllocDebug`)
 and `FUN_02008500` (register-shuffling tail-call thunk).
 
+## 4b. Fourth matching-C batch (`ai/space-bunny-fourth-batch`)
+
+Continued from the third batch at `cc99106`. Baseline re-verified before any
+edit: `check-toolchain` OK, 7/7 carve regression tests OK, `make compare`
+byte-identical ROM. The next adjacent unit was the accessor cluster at
+`0x02008730`–`0x020087E8`, all of which route through `FUN_020071CC(obj, 0x1b)`
+(a sub-structure getter) and then apply a fixed or indexed field offset.
+
+| Function | C | Verified |
+| --- | --- | --- |
+| `FUN_02008730` | `(u8 *)FUN_020071CC(obj, 0x1b) + 4` | MATCH, `ROM matches` |
+| `FUN_02008748` | `(u8 *)FUN_020071CC(obj, 0x1b) + 0x24` | MATCH, `ROM matches` |
+| `FUN_02008754` | `*(u8 *)((u8 *)FUN_020071CC(obj, 0x1b) + 0x2c)` | MATCH, `ROM matches` |
+| `FUN_02008764` | `*(u8 *)((u8 *)FUN_020071CC(obj, 0x1b) + 0x2c) = 1` | MATCH, `ROM matches` |
+| `FUN_02008774` | `*(u8 *)((u8 *)FUN_020071CC(obj, 0x1b) + 0x2c) = 0` | MATCH, `ROM matches` |
+| `FUN_02008784` | `*(u16 *)(... + index * 2 + 0x30) == 0xC21E` | MATCH, `ROM matches` |
+| `FUN_020087A8` | `*(u16 *)(... + index * 2 + 0x30) = 0xC21E` | MATCH, `ROM matches` |
+| `thunk_FUN_02008216` | `(u8 *)FUN_020071CC(obj, 0x1b) + 0x44 + index * 4` | MATCH, `ROM matches` |
+
+One commit per conversion; `compare-arm9` MATCH after every commit. No symbol
+was renamed and no struct was introduced — the only new header is
+`include/unk_020071CC.h`, a declaration for the still-unnamed sub-structure
+getter. `FUN_0200873c` (a pure tail-call thunk to `FUN_020071CC`) and the two
+16-byte block copies `FUN_020087E8` / `FUN_02008808` were left in assembly:
+the former matches no plausible C, and the latter need a struct view this
+batch deliberately did not invent.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
