@@ -379,6 +379,62 @@ halfword load at `0x98`. `FUN_02008ad8`, `FUN_02008f34`, `FUN_0200904c` and the
 other mid-stream splits in this bank are not function starts and were not
 touched. Unknown names preserved throughout; no renames.
 
+### Lane E batch (`asm/unk_0200BDE4.s` cluster, 0x0200BE48–0x0200C720)
+
+A parallel lane, isolated in its own worktree on branch
+`ai/space-bunny-parallel-e`, converted ten leaf helpers out of
+`asm/unk_0200BDE4.s`. Baseline re-verified first: `check-toolchain` OK, 7/7
+carve regression tests OK, `make compare-arm9` MATCH. One commit per
+conversion, `compare-arm9` MATCH after every one.
+
+| Function | C | Verified |
+| --- | --- | --- |
+| `FUN_0200C1C4` | `*(void **)((u8 *)obj + 0x18)` | MATCH, `ROM matches` |
+| `FUN_0200C1DC` | `*(void **)((u8 *)obj + 0x1c)` | MATCH, `ROM matches` |
+| `FUN_0200C1F4` | `(u8 *)obj + 0x20` | MATCH, `ROM matches` |
+| `FUN_0200C224` | `*(u8 *)((u8 *)obj + 0x44)` | MATCH, `ROM matches` |
+| `FUN_0200C33C` | `*(u8 *)((u8 *)obj + arg1 + 0x47)` | MATCH, `ROM matches` |
+| `FUN_0200C364` | saturating `u16` add into a table at `+0x4a` | MATCH, `ROM matches` |
+| `FUN_0200C720` | `arg0 == 0 \|\| arg0 > 0x289` | MATCH, `ROM matches` |
+| `FUN_0200BE48` | `FUN_020071CC(obj, 0x35)` | MATCH, `ROM matches` |
+| `FUN_0200C0F0` | `FUN_020071CC(obj, 0x34)` | MATCH, `ROM matches` |
+| `FUN_0200C40C` | `FUN_020071CC(obj, 0x36)` | MATCH, `ROM matches` |
+
+### A carve collision this lane hit, and the fix
+
+`carve_function.py` names a data-only tail after the *next* function's
+address (`asm/unk_0200C1DC.s` for the `_0200C1C8` literal pool). When the very
+next function is then converted to C, `src/unk_0200C1DC.o` and
+`asm/unk_0200C1DC.o` share a basename; under `-search -l src -l asm` both
+`main.lsf` entries resolve to one file, so the link silently drops the C body
+and the whole ARM9 shifts. The symptom is a `NO MATCH` reporting 18.7% of bytes
+matching with the first divergence at `0x02004980`, far before the carve site.
+
+This lane renamed each such pool after its own first label instead:
+`asm/unk_0200C1C8.s`, `asm/unk_0200C1F8.s`, `asm/unk_0200C22C.s`,
+`asm/unk_0200C344.s`, updating the `main.lsf` slot to match. This is the
+convention the script's own docstring already states for data-only tails, so
+the fix belongs in `carve_function.py`: a tail should always be named after its
+first label, never after the following function's address.
+
+Two typing notes the codegen forced. `FUN_0200C364` only matches when the
+saturating sum is materialised into a local before the comparison and the
+addition is written as `sum = ptr[arg1]; sum += arg2;` — the fused
+`sum = ptr[arg1] + arg2` emits `add r2, r2, r1` where the original has
+`add r2, r1, r2`. `FUN_0200C720` only matches with the two-clause
+`arg0 == 0 || arg0 > 0x289` form; the single-comparison `arg0 > 0x289` drops
+the zero test entirely and the `arg0 != 0 && arg0 <= 0x289` rewrite branches
+with `bne` where the original branches with `beq`.
+
+`FUN_0200c76c` was carved and then reverted: it ends `pop {r4, r5}; bx lr`, so
+it is the tail-call half of its caller rather than a standalone function, and
+it is not a function start at all. `FUN_0200c39e` is likewise a non-word-aligned
+entry whose body straddles a literal pool. The `FUN_0200BDE4` /
+`FUN_0200BE54` / `FUN_0200BE6C` / `FUN_0200C418` / `FUN_0200C4E8` /
+`FUN_0200c6fe` group was left in assembly: those allocate stack frames, call
+through `MI_CpuFill8` / `FUN_021763BC`, or run word-copy loops that need a
+struct view this lane declines to invent. No symbols renamed.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
