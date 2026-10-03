@@ -8,6 +8,7 @@ import re
 import sys
 
 FUNC_START_RE = re.compile(r'^\s*(\w*func_start)\s+(\S+)\s*$')
+FUNC_END_RE = re.compile(r'^\s*\w*func_end\s+(\S+)\s*$')
 EXTERN_RE = re.compile(r'^\s*\.extern\s+(\S+)\s*$')
 ADDR_RE = re.compile(r'^\w+: [;@] 0x([0-9A-Fa-f]{8})')
 LABEL_RE = re.compile(r'^(\w+):')
@@ -19,15 +20,21 @@ UNRELOCATABLE_RE = re.compile(
 
 def find_function(name):
     """find the file and line range a function owns"""
-    # func_end sits at the first local label in half the dump, so bound on the next func_start
     for path in sorted(glob.glob('asm/unk_*.s') + glob.glob('asm/overlay_*.s')):
         lines = open(path).read().splitlines()
         starts = [i for i, line in enumerate(lines) if FUNC_START_RE.match(line)]
         for k, i in enumerate(starts):
             if FUNC_START_RE.match(lines[i]).group(2) != name:
                 continue
-            end = starts[k + 1] if k + 1 < len(starts) else len(lines)
-            return path, lines, i, end
+            limit = starts[k + 1] if k + 1 < len(starts) else len(lines)
+            # prefer this function's own func_end: anything between it and the
+            # next func_start is a literal pool or stray data that belongs to no
+            # function, and dropping it shifts every following address
+            for j in range(i + 1, limit):
+                m = FUNC_END_RE.match(lines[j])
+                if m and m.group(1) == name:
+                    return path, lines, i, j + 1
+            return path, lines, i, limit
     return None, None, None, None
 
 
@@ -145,22 +152,44 @@ def main():
         if m:
             after_addr = int(m.group(1), 16)
             break
+    if after_addr is None:
+        # a tail with no function in it (a bare literal pool) is named after its
+        # first label, which carries the address
+        m = re.match(r'^_[0-9A-Fa-f]{8}:', after_body[0]) if after_body else None
+        after_addr = int(m.group(0)[1:9], 16) if m else None
     # name the lower half after the file it came out of
     prefix = base.rsplit('_', 1)[0] if base.startswith('overlay_') else "unk"
     after_name = f"{prefix}_{after_addr:08X}" if after_addr else base + "_b"
 
     print(f"{args.function} at 0x{address:08X} in {path}")
-    print(f"  before: {len(before_body)} lines -> asm/{base}.s")
-    print(f"  after:  {len(after_body)} lines -> asm/{after_name}.s")
+    print(f"  before: {len(before_body)} lines -> "
+          f"{'asm/' + base + '.s' if before_body else '(dropped)'}")
+    print(f"  after:  {len(after_body)} lines -> "
+          f"{'asm/' + after_name + '.s' if after_body else '(dropped)'}")
     print(f"  object: {args.object}")
 
     if args.dry_run:
         return 0
 
-    open(path, 'w').write(
-        "\n".join(with_extern(before_body) + before_body) + "\n")
-    open(f"asm/{after_name}.s", 'w').write(
-        "\n".join(with_extern(after_body) + after_body) + "\n")
+    # an empty half must not become an empty object: it would take the file's
+    # name and collide with the new C object under the linker's -search paths
+    if not before_body:
+        # the whole file becomes the upper half under a fresh name
+        if os.path.exists(f"asm/{after_name}.s"):
+            print(f"error: asm/{after_name}.s already exists", file=sys.stderr)
+            return 1
+        open(f"asm/{after_name}.s", 'w').write(
+            "\n".join(with_extern(after_body) + after_body) + "\n")
+        os.remove(path)
+    else:
+        open(path, 'w').write(
+            "\n".join(with_extern(before_body) + before_body) + "\n")
+        if after_body:
+            if os.path.exists(f"asm/{after_name}.s"):
+                print(f"error: asm/{after_name}.s already exists", file=sys.stderr)
+                return 1
+            open(f"asm/{after_name}.s", 'w').write(
+                "\n".join(with_extern(after_body) + after_body) + "\n")
 
     lsf = open(args.lsf).read().splitlines()
     marker = f"\tObject\t\tasm/{base}.o"
@@ -168,8 +197,14 @@ def main():
         print(f"error: {marker} not in {args.lsf}", file=sys.stderr)
         return 1
     at = lsf.index(marker)
-    lsf[at + 1:at + 1] = [f"\tObject\t\t{args.object}",
-                          f"\tObject\t\tasm/{after_name}.o"]
+    inserted = [f"\tObject\t\t{args.object}"]
+    if after_body:
+        inserted.append(f"\tObject\t\tasm/{after_name}.o")
+    if before_body:
+        lsf[at + 1:at + 1] = inserted
+    else:
+        # asm/base.o is gone; its slot now holds the C object and the upper half
+        lsf[at:at + 1] = inserted
     open(args.lsf, 'w').write("\n".join(lsf) + "\n")
     print(f"  main.lsf: inserted after asm/{base}.o")
     return 0
