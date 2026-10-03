@@ -180,7 +180,10 @@ def main():
 
     # an empty half must not become an empty object: it would take the file's
     # name and collide with the new C object under the linker's -search paths
-    if not before_body:
+    if not before_body and not after_body:
+        # the carved function was the entire file; it leaves nothing behind
+        os.remove(path)
+    elif not before_body:
         # the whole file becomes the upper half under a fresh name
         if os.path.exists(f"asm/{after_name}.s"):
             print(f"error: asm/{after_name}.s already exists", file=sys.stderr)

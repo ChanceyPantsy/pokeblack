@@ -82,6 +82,17 @@ FUN_02008560: ; 0x02008560
 \tthumb_func_end FUN_02008560
 """
 
+# The only function in its file, so carving it empties the file completely.
+ONLY = """\t.include "asm/macros/function.inc"
+
+\t.text
+\tthumb_func_start FUN_02008570
+FUN_02008570: ; 0x02008570
+\tldrb r0, [r0, #0x19]
+\tbx lr
+\tthumb_func_end FUN_02008570
+"""
+
 def lsf_for(names):
     objects = [f"\tObject\t\tasm/{n}.o" for n in names]
     return ("Linker Script File\nGroup\tmain.elf\n{\n\tStatic main\n"
@@ -204,6 +215,21 @@ class TestObjectNameCollision(CarveTestCase):
         # wildcard in common.mk
         self.assertFalse(os.path.exists('asm/unk_0200856C.s'))
         self.assertIn('FUN_02008570:', read('asm/unk_02008570.s'))
+
+
+class TestWholeFileCarve(CarveTestCase):
+    """Carving the only function in a file leaves nothing behind at all."""
+
+    def test_no_empty_object_is_written(self):
+        objs = self.carve('FUN_02008570', 'src/unk_02008570.o',
+                          'unk_02008570.s', ONLY)
+
+        self.assertFalse(os.path.exists('asm/unk_02008570.s'))
+        self.assertFalse(os.path.exists('asm/unk_02008570_b.s'))
+        self.assertEqual(objs, [
+            'src/unk_02008570.o',
+            'src/unk_02008574.o',
+        ])
 
 
 class TestSplitInTheMiddle(CarveTestCase):
