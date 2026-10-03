@@ -6,12 +6,6 @@
 	.extern MI_CpuFill8
 
 	.text
-	thumb_func_start FUN_0200856C
-FUN_0200856C: ; 0x0200856C
-	ldrb r0, [r0, #0x18]
-	bx lr
-	thumb_func_end FUN_0200856C
-
 	thumb_func_start FUN_02008570
 FUN_02008570: ; 0x02008570
 	ldrb r0, [r0, #0x19]
