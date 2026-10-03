@@ -2,6 +2,7 @@
 
 	.extern FUN_0200EE48
 	.extern FUN_0200EE50
+	.extern FUN_0200F0CC
 	.extern FUN_0200F104
 	.extern FUN_0216E2E8
 	.extern MI_CpuCopy8
@@ -344,38 +345,3 @@ _0200F0C6:
 	pop {r4, r5, r6, r7, pc}
 	.balign 4, 0
 	thumb_func_end FUN_0200f066
-
-	thumb_func_start FUN_0200F0CC
-FUN_0200F0CC: ; 0x0200F0CC
-	push {r4, r5, r6, r7}
-	ldrh r3, [r0, #4]
-	ldr r5, [r2]
-	cmp r5, r3
-	bhs _0200F0FC
-	ldr r4, [r0, #0x18]
-	lsl r0, r5, #8
-	mov r5, #1
-	add r4, r4, r0
-	lsl r5, r5, #8
-	mov r6, #1
-_0200F0E2:
-	ldr r0, [r2]
-	add r0, r0, #1
-	str r0, [r2]
-	ldr r7, [r4]
-	tst r7, r6
-	beq _0200F0F6
-	str r4, [r1]
-	mov r0, #1
-	pop {r4, r5, r6, r7}
-	bx lr
-_0200F0F6:
-	add r4, r4, r5
-	cmp r0, r3
-	blo _0200F0E2
-_0200F0FC:
-	mov r0, #0
-	pop {r4, r5, r6, r7}
-	bx lr
-	.balign 4, 0
-	thumb_func_end FUN_0200F0CC
