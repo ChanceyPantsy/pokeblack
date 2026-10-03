@@ -342,6 +342,43 @@ helpers) were left in assembly: the first pair need a struct view this batch
 declines to invent, and the second do not reduce to plausible C without the
 same.
 
+### Sixth batch (0x02008468–0x020095E8 leaf helpers)
+
+Continued into `asm/unk_02008EF8.s` and the adjacent `asm/unk_02008468.s` /
+`asm/unk_0200857C.s` units. Twelve more leaf helpers converted, one commit
+each, `compare-arm9` MATCH after every one.
+
+| Function | C | Verified |
+| --- | --- | --- |
+| `FUN_02008EF8` | `*(u8 *)((u8 *)obj + 7) <= 0xB` | MATCH, `ROM matches` |
+| `FUN_02009000` | empty body | MATCH, `ROM matches` |
+| `FUN_020090E0` | `*(u8 *)((u8 *)obj + 0x27)` | MATCH, `ROM matches` |
+| `FUN_02009210` | `FUN_020071CC(arg1, 0x20)` | MATCH, `ROM matches` |
+| `FUN_020095E8` | saturating `u8` increment at `+0x345` | MATCH, `ROM matches` |
+| `FUN_02009310` | index-bounded `u16` fetch, `> 0x272` clamps to 0 | MATCH, `ROM matches` |
+| `FUN_0200873C` | `FUN_020071CC(arg1, 0x1b)` | MATCH, `ROM matches` |
+| `FUN_02008F3C` | `MI_CpuCopy8(src, dst, 0x38)` | MATCH, `ROM matches` |
+| `FUN_0200863C` | `MI_CpuCopy8(src, dst, 8)` | MATCH, `ROM matches` |
+| `FUN_02008468` | `return 0x20` | MATCH, `ROM matches` |
+| `FUN_020084F4` | empty body | MATCH, `ROM matches` |
+| `FUN_02008500` | argument-swapping tail call to `FUN_02045924` | MATCH, `ROM matches` |
+
+Two typing notes the codegen forced: `FUN_02008EF8` and `FUN_02009310` only
+match with an `s32` / `u32` return rather than a narrowed one — the `u8` and
+`s32` spellings append a truncate-and-zero halfword pair that the original does
+not have. `FUN_0200863C` and `FUN_02008F3C` match only when the first parameter
+is named `src` for the `MI_CpuCopy8` argument order, since the original shuffles
+the two incoming registers before the tail call.
+
+Rejected and fully reverted: `FUN_0200934C` (the compiler emits
+`lsls r2, r1, #2` where the original reuses `r1` and rebuilds the constant,
+so the offset encoding differs), `FUN_02008860` (the original copies two
+adjacent words with `ldmia`/`stmia` pairs, which the per-field C form does not
+reproduce). `FUN_020088B8` was left alone for the same reason plus a signed
+halfword load at `0x98`. `FUN_02008ad8`, `FUN_02008f34`, `FUN_0200904c` and the
+other mid-stream splits in this bank are not function starts and were not
+touched. Unknown names preserved throughout; no renames.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
