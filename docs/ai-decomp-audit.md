@@ -320,7 +320,8 @@ batch deliberately did not invent.
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
   untouched at the time of writing.
-- No C was written for any candidate, because none can be verified without the
-  compiler, and unverified C in a matching repo is worse than no C.
+- No C was written for any candidate without a verified match; each C file in
+  `src/` listed above was accepted by `compare-arm9` and by a full
+  byte-identical ROM build.
 - No upstream pull request was prepared, and none is contemplated under this
   branch.
