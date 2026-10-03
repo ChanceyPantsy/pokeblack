@@ -96,6 +96,8 @@ Static main
 	Object		src/FUN_0200EE48.o
 	Object		src/FUN_0200EE50.o
 	Object		asm/unk_0200EE64.o
+	Object		src/FUN_0200F104.o
+	Object		asm/unk_0200F128.o
 	Object		asm/unk_0200F150.o
 	Object		asm/unk_0200F7B8.o
 	Object		asm/unk_0200FD38.o
