@@ -1,6 +1,7 @@
 	.include "asm/macros/function.inc"
 
 	.extern FUN_020071CC
+	.extern FUN_02008854
 	.extern FUN_02014468
 	.extern FUN_0202428C
 	.extern FUN_0203F2FC
@@ -9,15 +10,6 @@
 	.extern FUN_02087C88
 
 	.text
-	thumb_func_start FUN_02008854
-FUN_02008854: ; 0x02008854
-	ldr r3, _0200885C ; =FUN_020071CC
-	mov r1, #0x1c
-	bx r3
-	nop
-_0200885C: .word 0x020071CD ; was FUN_020071CC
-	thumb_func_end FUN_02008854
-
 	thumb_func_start FUN_02008860
 FUN_02008860: ; 0x02008860
 	push {r3, r4, r5, lr}
