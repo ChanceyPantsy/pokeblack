@@ -97,6 +97,8 @@ Static main
 	Object		asm/unk_0200B3DC.o
 	Object		src/unk_0200b424.o
 	Object		asm/unk_0200B448.o
+	Object		src/unk_0200B448_call.o
+	Object		asm/unk_0200B4E0.o
 	Object		asm/unk_0200B628.o
 	Object		asm/unk_0200BDE4.o
 	Object		asm/unk_0200C7C0.o
