@@ -14,8 +14,8 @@ ADDRESSED_RE = re.compile(r'^(?:FUN_|_)([0-9A-Fa-f]{8})(?:_dup\d+)?$')
 # libsyscall.a types these thumb, an absolute LCF symbol cannot and blx needs it
 PROVIDED_RE = re.compile(r'^SVC_\w+$')
 
-# decompiled functions get renamed off FUN_<addr>, so match any call target
-C_SYMBOL_RE = re.compile(r'\b([A-Za-z_]\w*)\s*\(')
+# only a definition counts as provided; a call site resolves through the LCF
+C_DEFN_RE = re.compile(r'^[A-Za-z_][\w \t\*]*?\b([A-Za-z_]\w*)\s*\([^;]*\)\s*\{', re.M)
 
 # a GLOBAL_ASM block defines its symbol in the .s it names, not in the C
 GLOBAL_ASM_RE = re.compile(r'GLOBAL_ASM\("([^"]+)"\)')
@@ -55,7 +55,7 @@ def main():
         if not os.path.exists(path):
             continue
         text = open(path).read()
-        provided.update(C_SYMBOL_RE.findall(text))
+        provided.update(C_DEFN_RE.findall(text))
         for asm in GLOBAL_ASM_RE.findall(text):
             if os.path.exists(asm):
                 provided.update(m.group(1) for line in open(asm) if (m := GLABEL_RE.match(line)))
