@@ -53,6 +53,8 @@ Static main
 	Object		src/unk_02008850.o
 	Object		src/unk_02008854.o
 	Object		asm/unk_02008860.o
+	Object		src/unk_0200892C.o
+	Object		asm/unk_0200893C.o
 	Object		src/unk_0200894C.o
 	Object		src/unk_02008954.o
 	Object		src/unk_0200895C.o
