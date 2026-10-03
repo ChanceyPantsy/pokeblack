@@ -384,6 +384,49 @@ Left in assembly, as before: `FUN_0200A480` / `FUN_0200A4B8` (the multi-call
 the `FUN_0200AB50`–`FUN_0200ad30` bank, which are the 0x1C-stride record-array
 sort/memmove helpers and need a struct view this batch declines to invent.
 
+### Parallel lane H — eighth batch (`ai/space-bunny-parallel-h`)
+
+Continued into the `0x0200E0BC`–`0x0200E4B0` accessor band from the parallel-B
+tip (`d7c1162`). Baseline re-verified first: `make check-toolchain` OK,
+9/9 tooling tests OK, `make compare-arm9` MATCH, `make compare` byte-identical.
+Five functions converted, one commit each, `compare-arm9` MATCH after every one.
+
+| Function | C | Verified |
+| --- | --- | --- |
+| `FUN_0200E3A0` | `(u8 *)ptr + 0xD2` | MATCH, `ROM matches` |
+| `FUN_0200E394` | `FUN_020071CC(obj, 0x3F)` | MATCH, `ROM matches` |
+| `FUN_0200E488` | `FUN_0216736C(index & 0xFF, count) + (count - 1)` | MATCH, `ROM matches` |
+| `FUN_0200E49C` | `FUN_0200E4B0(...) < 0x63 ? 0 : 1` | MATCH, `ROM matches` |
+| `FUN_0200E4B0` | `((u8 *)obj + FUN_0200E488(index, count))[0x3C]` | MATCH, `ROM matches` |
+
+Three new headers declare the still-unnamed externals the band calls:
+`include/unk_0216736C.h`, `include/unk_0200E488.h`, `include/unk_0200E4B0.h`.
+
+Two codegen notes worth carrying forward:
+
+- **`FUN_0200E488` operand order is load-bearing.** Its three plausible C
+  spellings — `FUN(...) + (count - 1)`, `(count - 1) + FUN(...)`, and
+  `base + offset` with both in locals — compile to the *same* instruction count
+  but differ in the `add` operand order (`add r0, r1, r0` vs `add r0, r0, r1`).
+  Only the last spelling matches. When a function is one byte short or long,
+  diff the object against the built sbin with
+  `cmp -l build/black.us/main.sbin <good copy>` before rewriting the C; the
+  byte offset maps straight back to the instruction.
+- **`asm/unk_0200E47C.s` removed.** It was a dead leftover never listed in
+  `main.lsf` that duplicated `FUN_0200E49C` and `FUN_0200E4B0`, so
+  `carve_function.py` located both in it and aborted with
+  `Object asm/unk_0200E47C.o not in main.lsf`. Same class as the orphaned
+  `asm/unk_02008568.s` cleaned up in section 4b; `carve_function.py` should
+  prefer the file `main.lsf` actually links.
+
+Left in assembly: `FUN_0200E0BC` (a 4-slot threshold search — nine C spellings
+all matched instruction-for-instruction except the final `add r0, r4, #0`, which
+MWCC allocates to a different callee-saved register than the original; reverted
+rather than shipped unverified) and `FUN_0200E124`, which came to a single-byte
+`ldrh` operand-order difference at 0x0200A135 after the body, table index and
+copy-argument order were all resolved. Both are the same register-allocation
+class as the `FUN_0200E488` note above and are the first things to retry.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
