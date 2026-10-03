@@ -260,9 +260,34 @@ Removed in `f5e3a51`.
 Final state: `make check-toolchain` OK, `make compare-arm9` MATCH, `make compare`
 → `main.sbin`, `arm7.sbin` and `ROM` all match, 7 carve tests pass.
 
-Remaining from the original backlog: `FUN_02008534` (a `ldr`/`lsl`/`lsr`
-u16-truncating accessor — still assembly in `asm/unk_02008534.s`) and the
-harder `FUN_0200846C` / `FUN_02008500` cases.
+## 4c. Third batch — results (branch `ai/space-bunny-third-batch`)
+
+Done on top of `284fa30`. Baseline re-verified first: `make check-toolchain` OK,
+`make compare-arm9` MATCH (681,920 bytes + 12-byte SDK trailer), 7/7 carve
+tests OK, `make compare` byte-identical. Six functions converted, each in its
+own commit, each verified individually with `make compare-arm9` MATCH.
+
+| Function | C | Verified |
+| --- | --- | --- |
+| `FUN_02008534` | `(u16)(*(u32 *)((u8 *)obj + 0x10))` | MATCH, `ROM matches` |
+| `FUN_0200864C` | `*(u16 *)obj` | MATCH, `ROM matches` |
+| `FUN_02008650` | `*(u8 *)((u8 *)obj + 2)` | MATCH, `ROM matches` |
+| `FUN_02008844` | empty body (`bx lr`) | MATCH, `ROM matches` |
+| `FUN_02008848` | `(u8 *)obj + 0x38` | MATCH, `ROM matches` |
+| `FUN_0200884C` | `(u8 *)obj + 0x54` | MATCH, `ROM matches` |
+
+Selection was driven by the units adjacent to the first two batches: the
+remaining `asm/unk_02008468.s` run, the two accessor tails of
+`asm/unk_0200857C.s`, and the three-object-offset getters at the end of
+`asm/unk_02008658.s`. All six are leaves with no calls, no branches and no
+PC-relative data, so each carve was accepted by `--dry-run` and each function
+has multiple caller files — a codegen mistake surfaces immediately as a byte
+diff rather than silent semantic drift. Return and parameter types stay
+provisional (`void *obj` in, a scalar or `void *` out) because the underlying
+structs are still unnamed; no symbol was renamed.
+
+Remaining known-hard cases: `FUN_0200846C` (stack frame + `Heap_AllocDebug`)
+and `FUN_02008500` (register-shuffling tail-call thunk).
 
 ## 5. What this document deliberately does not do
 
