@@ -316,6 +316,32 @@ getter. `FUN_0200873c` (a pure tail-call thunk to `FUN_020071CC`) and the two
 the former matches no plausible C, and the latter need a struct view this
 batch deliberately did not invent.
 
+### Fifth batch (0x02008850–0x02008964 helper cluster)
+
+Continued into the next assembly unit, `asm/unk_02008850.s`. Nine more leaf
+helpers converted, one commit each, `compare-arm9` MATCH after every one.
+
+| Function | C | Verified |
+| --- | --- | --- |
+| `FUN_02008850` | `(u8 *)obj + 0x70` | MATCH, `ROM matches` |
+| `FUN_02008854` | `FUN_020071CC(obj, 0x1c)` | MATCH, `ROM matches` |
+| `FUN_0200894C` | `*(u8 *)((u8 *)obj + 0x73) = value` | MATCH, `ROM matches` |
+| `FUN_02008954` | `*out = *(u8 *)((u8 *)obj + 0x73)` | MATCH, `ROM matches` |
+| `FUN_0200895C` | `*(u8 *)((u8 *)obj + 0x74) = value` | MATCH, `ROM matches` |
+| `FUN_02008964` | `*out = *(u8 *)((u8 *)obj + 0x74)` | MATCH, `ROM matches` |
+| `FUN_0200892C` | `*(u8 *)((u8 *)obj + 0x72) = FUN_02014468(arg1)` | MATCH, `ROM matches` |
+| `FUN_0200893C` | `FUN_02014464(arg1, *(u8 *)((u8 *)obj + 0x72))` | MATCH, `ROM matches` |
+| `FUN_02008b14` | `(u8 *)FUN_020071CC(obj, 0x25) + 0x10` | MATCH, `ROM matches` |
+
+Three new headers declare the still-unnamed externals the two `0x72`-field
+helpers call: `include/unk_02014464.h`, `include/unk_02014468.h`. Still no
+renames and no invented struct. `FUN_02008860` / `FUN_020088B8` (whole-field
+block copies between a sub-structure and a caller buffer) and the
+`FUN_02008c2c`–`FUN_02008eb8` bank (`blx`-calling, register-shuffling window
+helpers) were left in assembly: the first pair need a struct view this batch
+declines to invent, and the second do not reduce to plausible C without the
+same.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
