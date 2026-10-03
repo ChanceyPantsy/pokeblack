@@ -108,15 +108,3 @@ _02008634:
 	nop
 _02008638: .word 0x000003E7
 	thumb_func_end FUN_0200861a
-
-	thumb_func_start FUN_0200863C
-FUN_0200863C: ; 0x0200863C
-	add r2, r0, #0
-	add r0, r1, #0
-	add r1, r2, #0
-	ldr r3, _02008648 ; =MI_CpuCopy8
-	mov r2, #8
-	bx r3
-	.balign 4, 0
-_02008648: .word 0x02082D44 ; was MI_CpuCopy8
-	thumb_func_end FUN_0200863C
