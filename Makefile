@@ -11,7 +11,7 @@ OPTFLAGS       := -O4,p
 include config.mk
 
 ASM_SUBDIR     := asm asm/arm9
-LINKED_C_SRCS  := unk_02008530.c unk_02008534.c unk_0200853C.c unk_02008550.c unk_02008554.c unk_02008560.c unk_02008568.c unk_0200856C.c unk_02008570.c unk_02008574.c unk_0200864C.c unk_02008650.c 02008844.c 02008848.c 0200884C.c unk_02008730.c unk_02008748.c unk_02008754.c unk_02008764.c unk_02008774.c unk_02008784.c unk_020087A8.c thunk_FUN_02008216.c unk_02008850.c unk_02008854.c unk_0200894C.c unk_02008954.c unk_0200895C.c unk_02008964.c battle_record.c
+LINKED_C_SRCS  := unk_02008530.c unk_02008534.c unk_0200853C.c unk_02008550.c unk_02008554.c unk_02008560.c unk_02008568.c unk_0200856C.c unk_02008570.c unk_02008574.c unk_0200864C.c unk_02008650.c 02008844.c 02008848.c 0200884C.c unk_02008730.c unk_02008748.c unk_02008754.c unk_02008764.c unk_02008774.c unk_02008784.c unk_020087A8.c thunk_FUN_02008216.c unk_02008850.c unk_02008854.c unk_0200894C.c unk_02008954.c unk_0200895C.c unk_02008964.c unk_02008b14.c battle_record.c
 SYM_GLOBS      := 'asm/unk_*.s' 'asm/overlay_*.s' 'asm/battle_*.s' 'asm/arm9/*.s'
 LDSEARCH       := -search -l . -l src -l asm
 CRT0_OBJ       := asm/crt0.o
