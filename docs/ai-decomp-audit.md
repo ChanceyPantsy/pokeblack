@@ -219,8 +219,50 @@ Final state: `make check-toolchain` OK, `make compare-arm9` MATCH, `make compare
   `-search`; the linker aborts with `Symbol FUN_0200856C multiply defined`. Also
   a script limitation, not a codegen one.
 
-Both are worth reporting upstream as script bugs, but the fixes are outside this
-branch's scope and would touch the one tool every contributor shares.
+Both were worth reporting upstream as script bugs, and both are now fixed on
+`ai/space-bunny-second-batch` — see section 4b.
+
+## 4b. Second batch — results (branch `ai/space-bunny-second-batch`)
+
+Done on top of `177d9fe`. Both former blockers were tooling bugs and were
+repaired before any conversion; five functions converted, each in its own
+commit, each verified individually with `make compare-arm9` MATCH.
+
+### Script repairs, with regression tests
+
+`tools/scripts/tests/test_carve_function.py` (7 cases, stdlib `unittest`, run
+with `python3 -m unittest discover -s tools/scripts/tests`) pins all of these;
+each test fails against the pre-fix script.
+
+| Defect | Fix | Commit |
+| --- | --- | --- |
+| Function bounded at the next `func_start`, swallowing the literal pool between `thumb_func_end` and it | bound on the function's own `func_end`; a data-only tail is named after its first label | `e2155eb` |
+| Carving a file's first function left a 0-line lower half whose object collided with the new C object under `-search` | an empty half is dropped, and its `main.lsf` slot reused | `e2155eb` |
+| A bare literal pool object has no `func_start`, so `gen_force_active.py` had no symbol to anchor it and the linker relocated it | emit a `.global` on the tail's first label | `e2155eb` |
+| Carving the only function in a file still wrote an empty `asm/<name>_b.s` | drop the file entirely when both halves are empty | `d6ac59d` |
+
+A separate cleanup was needed: `asm/unk_02008568.s` was left behind by the first
+batch. It was never listed in `main.lsf`, so it never linked, but it duplicated
+`FUN_02008568` (now C), `FUN_0200856C` and `FUN_02008570`, and
+`carve_function.py` located functions in it instead of `asm/unk_0200856C.s`.
+Removed in `f5e3a51`.
+
+### Conversions
+
+| Function | Commit | C | Verified |
+| --- | --- | --- | --- |
+| `FUN_02008560` | `94821bb` | `((u8 *)obj)[0x1B] = value` | `compare-arm9` MATCH, `ROM matches` |
+| `FUN_0200856C` | `f094949` | `((u8 *)obj)[0x18]` | `compare-arm9` MATCH, `ROM matches` |
+| `FUN_02008570` | `ce2a791` | `((u8 *)obj)[0x19]` | `compare-arm9` MATCH, `ROM matches` |
+| `FUN_02008554` | `0a13120` | `((u8 *)obj)[0x1C]` | `compare-arm9` MATCH, `ROM matches` |
+| `FUN_0200853C` | `d0932a2` | `*(u32 *)((u8 *)obj + 0x14)` | `compare-arm9` MATCH, `ROM matches` |
+
+Final state: `make check-toolchain` OK, `make compare-arm9` MATCH, `make compare`
+→ `main.sbin`, `arm7.sbin` and `ROM` all match, 7 carve tests pass.
+
+Remaining from the original backlog: `FUN_02008534` (a `ldr`/`lsl`/`lsr`
+u16-truncating accessor — still assembly in `asm/unk_02008534.s`) and the
+harder `FUN_0200846C` / `FUN_02008500` cases.
 
 ## 5. What this document deliberately does not do
 
