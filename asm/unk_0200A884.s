@@ -5,19 +5,6 @@
 	.extern FUN_0203F2FC
 
 	.text
-	thumb_func_start FUN_0200A870
-FUN_0200A870: ; 0x0200A870
-	add r2, r0, #0
-	add r0, r1, #0
-	add r1, r2, #0
-	mov r2, #0x7a
-	ldr r3, _0200A880 ; =MI_CpuCopy8
-	lsl r2, r2, #2
-	bx r3
-	nop
-_0200A880: .word 0x02082D44 ; was MI_CpuCopy8
-	thumb_func_end FUN_0200A870
-
 	thumb_func_start FUN_0200A884
 FUN_0200A884: ; 0x0200A884
 	mov r2, #0x7a
