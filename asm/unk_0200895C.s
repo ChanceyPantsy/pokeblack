@@ -10,14 +10,6 @@
 	.extern FUN_02087C88
 
 	.text
-	thumb_func_start FUN_02008954
-FUN_02008954: ; 0x02008954
-	add r0, #0x73
-	ldrb r0, [r0]
-	strb r0, [r1]
-	bx lr
-	thumb_func_end FUN_02008954
-
 	thumb_func_start FUN_0200895C
 FUN_0200895C: ; 0x0200895C
 	add r0, #0x74
