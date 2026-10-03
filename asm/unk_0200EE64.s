@@ -1,22 +1,11 @@
 	.include "asm/macros/function.inc"
 
 	.extern FUN_0200EE48
+	.extern FUN_0200EE50
 	.extern FUN_0216E2E8
 	.extern MI_CpuCopy8
 
 	.text
-	thumb_func_start FUN_0200EE50
-FUN_0200EE50: ; 0x0200EE50
-	push {r4, lr}
-	add r4, r0, #0
-	bl FUN_0200EE48
-	add r2, r0, #0
-	add r0, r4, #0
-	mov r1, #0
-	.hword 0xF073, 0xEEB6 ; blx MI_CpuFill8
-	pop {r4, pc}
-	thumb_func_end FUN_0200EE50
-
 	thumb_func_start FUN_0200EE64
 FUN_0200EE64: ; 0x0200EE64
 	push {r3, r4, r5, r6, r7, lr}
