@@ -20,7 +20,7 @@ Static main
 	Object		asm/unk_02007F7C.o
 	Object		asm/unk_02008468.o
 	Object		src/unk_02008530.o
-	Object		asm/unk_02008534.o
+	Object		src/unk_02008534.o
 	Object		src/unk_0200853C.o
 	Object		asm/unk_02008540.o
 	Object		src/unk_02008550.o
