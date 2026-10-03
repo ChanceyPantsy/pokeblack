@@ -188,6 +188,40 @@ Common traits that make them low-risk first conversions:
    `ndsdisasm_config/arm9_config.cfg` in the same commit as any rename
    (`FUN_02008568` is at `ndsdisasm_config/arm9_config.cfg:152`).
 
+## 4a. First batch — results (branch `ai/space-bunny-first-batch`)
+
+Done on top of commit `85c6b40` with the toolchain installed. Baseline at
+`85c6b40` was `make compare-arm9` MATCH (681,920 bytes, 12-byte SDK trailer).
+Each conversion below was built and verified individually with compare checking
+left on.
+
+| Function | Commit | C | Verified |
+| --- | --- | --- | --- |
+| `FUN_02008530` | `fdaec31` | `u32 (*(u32 *)((u8 *)obj + 0x10))` | `compare-arm9` MATCH, `ROM matches` |
+| `FUN_02008550` | `aa48047` | `((u8 *)obj)[0x1D]` | `compare-arm9` MATCH, `ROM matches` |
+| `FUN_02008568` | `6478e5d` | `((u8 *)obj)[0x1A] = value` | `compare-arm9` MATCH, `ROM matches` |
+
+Final state: `make check-toolchain` OK, `make compare-arm9` MATCH, `make compare`
+→ `ROM matches black.us/rom.sha1`.
+
+### Two carve limitations hit, and how they were handled
+
+- **Candidate D (`FUN_02008560`) reverted.** `carve_function.py` bounds a function
+  at the next `func_start`, so it swallowed the 4-byte data pool `_02008564`
+  that sits between `FUN_02008560` and `FUN_02008568`. The 681,920-byte ARM9 came
+  back 4 bytes short, which shifted every following address; the diff showed
+  69,697 runs / 565,106 bytes differing, with the first divergence at 0x02004980
+  — far before the carve site, which is the tell for a size change rather than a
+  codegen difference. Reverted cleanly. `FUN_02008560` is still a valid
+  candidate, but it needs the pool preserved, which is a fix to the script.
+- **Candidate `FUN_0200856C` reverted.** Carving it produces a lower half named
+  `asm/unk_0200856C.s`, whose object collides with `src/unk_0200856C.o` under
+  `-search`; the linker aborts with `Symbol FUN_0200856C multiply defined`. Also
+  a script limitation, not a codegen one.
+
+Both are worth reporting upstream as script bugs, but the fixes are outside this
+branch's scope and would touch the one tool every contributor shares.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
