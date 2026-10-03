@@ -11,20 +11,6 @@
 	.extern MI_CpuCopy8
 
 	.text
-	thumb_func_start FUN_0200E49C
-FUN_0200E49C: ; 0x0200E49C
-	push {r3, lr}
-	bl FUN_0200E4B0
-	cmp r0, #0x63
-	blo _0200E4AA
-	mov r0, #1
-	pop {r3, pc}
-_0200E4AA:
-	mov r0, #0
-	pop {r3, pc}
-	.balign 4, 0
-	thumb_func_end FUN_0200E49C
-
 	thumb_func_start FUN_0200E4B0
 FUN_0200E4B0: ; 0x0200E4B0
 	push {r4, lr}
