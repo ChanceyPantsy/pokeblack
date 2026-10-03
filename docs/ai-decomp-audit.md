@@ -1,0 +1,198 @@
+# pokeblack AI-assisted decompilation audit (bootstrap)
+
+**Provenance note — read this first.** This document was written by an LLM agent
+(OpenRouter `stealth/space-bunny-alpha`) operating in the user's personal fork
+`ChanceyPantsy/pokeblack` on branch `ai/space-bunny-bootstrap`. Per pokeblack's
+CONTRIBUTING.md AI Policy, **nothing produced under this branch may be submitted
+upstream**, and this work must not be represented as human-authored reverse
+engineering. The branch exists to give a human collaborator a durable, accurate
+starting point; attribution stays attached.
+
+This file is a *plan and inventory only*. No assembly was carved, no disassembly
+was edited, and no C was added. That is deliberate: see "Baseline build status".
+
+## 1. Repository audit
+
+| Fact | Value |
+| --- | --- |
+| Fork remote | `https://github.com/ChanceyPantsy/pokeblack.git` (origin) |
+| Branch audited | `main` @ `84e6b56` ("Update README.md") |
+| Upstream lineage | mirrors `squiddonaut/pokeblack`; last content-affecting upstream commits are `53b3e9d` (battle_record.c matching decomp) and `51c5447` |
+| Target ROM | Pokémon Black US/EUR NDSi-Enhanced v1.0, sha1 `26ad0b9967aa279c4a266ee69f52b9b2332399a5`, 268,435,456 bytes |
+| Compiler | Metrowerks CodeWarrior `dsi/1.1` (`mwccarm.exe` / `mwasmarm.exe` / `mwldarm.exe`), driven through Wine on Linux |
+| SDK | TWL-SDK 5.3 patch 1, only 4 files read from it |
+| ARM9 size | 681,920 bytes decompressed; `make compare-arm9` is the byte-for-byte gate |
+| Functions available | ~29,034 dumped; `ndsdisasm_config/arm9_config.cfg` still names 1,279 of 1,309 as `FUN_<address>` |
+| Overlays | 237 |
+| C already matching | 2 translation units: `src/unk_02008574.c`, `src/battle_record.c` |
+| Non-matching assembly kept | `asm/nonmatchings/battle_record_restorestart.s` |
+| Tooling | `tools/scripts/carve_function.py` (carving + `main.lsf` rewriting), `tools/asm_processor` (GLOBAL_ASM), `test/toolchain_canary.c` (frozen toolchain hash), `tools/scripts/find_holes.py` (code/data separation) |
+
+Build entry points: `make check-toolchain`, `make`, `make compare`,
+`make compare-arm9`, `make compare-all`. Hash checking is on by default; do not
+disable it with `COMPARE=0`.
+
+### Baseline build status (blocking prerequisite)
+
+On the machine this audit was written on:
+
+- `tools/mwccarm/dsi/1.1/` contains **only wrapper scripts** — no `mwccarm.exe`,
+  `mwasmarm.exe`, `mwldarm.exe`. Only `tools/mwasmarm_patcher/mwasmarm_patcher.exe`
+  ships in-tree.
+- `lib/` contains only `syscall/`; there is no `lib/NitroSDK/TwlSDK`.
+- `arm-none-eabi-objcopy` is not installed.
+- `baserom.nds` is absent (expected — it is gitignored; only the granular
+  `extract`/`compare-overlays`/`compare-table`/`compare-arm7` targets need it).
+
+Consequence: **a matching baseline cannot currently be built here**, so no carve
+or C addition was attempted. INSTALL.md steps 1–3 (and 5 for the granular
+compare targets) must be completed first. Once `make compare-arm9` prints
+`MATCH`, this backlog is unblocked.
+
+## 2. Verification workflow
+
+Run from the repository root, in this order:
+
+```bash
+make check-toolchain     # frozen canary: compiler emits the expected bytes
+make                     # builds build/black.us/poke*.nds, COMPARE=1 by default
+make compare-arm9        # must print MATCH (681,920 bytes)
+make compare             # same build with every recorded hash checked
+make compare-all         # adds overlays, arm7, overlay table, file manifests
+```
+
+Per-function loop for one decompiled function:
+
+```bash
+python3 tools/scripts/carve_function.py <FUN> --object src/<file>.o --dry-run
+python3 tools/scripts/carve_function.py <FUN> --object src/<file>.o
+# add the .c to LINKED_C_SRCS in Makefile
+make && make compare-arm9
+```
+
+Rules that must not be bent:
+
+- Every source file includes its own header of the same name, and that header
+  declares what the file defines. `MWCFLAGS` passes `-W error`, so a missing
+  prototype is a build failure, not a warning.
+- `MWCFLAGS` passes `-thumb`. Compiling ARM produces 4-byte instructions where
+  the original has 2.
+- Never "fix" a mismatch with `COMPARE=0`. If a function resists matching, keep
+  it as assembly via `GLOBAL_ASM` (Metrowerks mnemonics, e.g. `lsl`; blocks of
+  at least three Thumb instructions; `asm_processor` strips `-sym on` for those
+  compiles).
+- Renames go in their own commit, and must land in both the assembly and the
+  matching `ndsdisasm_config/*.cfg` entry.
+- Leave `ndsdisasm_config/` alone unless the symbol rename is part of the change.
+
+## 3. First-carve backlog
+
+All candidates below live in one contiguous run, `asm/unk_02008468.s`
+(148 lines, addresses 0x02008468–0x02008574). They are struct accessors on the
+same ~0x20/0x34-byte object that `FUN_02008574` (already in `src/`) pokes at
+offsets 0x18/0x19 — the accessor family is the natural companion to the one
+function already decompiled here.
+
+Common traits that make them low-risk first conversions:
+
+- Leaf functions: no calls, no loops, no branches except the return.
+- Return value is a plain `ldr`/`ldrb`/`mov` of a constant or a struct field.
+- No PC-relative data references inside them, so nothing crosses an object
+  boundary at carve time. `carve_function.py --dry-run` accepts all of them
+  (verified; see the split sizes below).
+- Heavily called, so a mistake shows up loudly at the first `compare-arm9` rather
+  than hiding — the failure mode is a byte diff, not a subtle semantic drift.
+
+### Candidate A — `FUN_02008530` (field read, 32-bit)
+
+- Address: 0x02008530, in `asm/unk_02008468.s`, body `ldr r0, [r0, #0x10]; bx lr`.
+- Suggested C: `u32 FUN_02008530(void *obj) { return *(u32 *)((u8 *)obj + 0x10); }`
+  — exact return type is a guess; the original may be a pointer or a `u32`
+  field. Check the struct in `asm/unk_02008468.s` context before fixing a type.
+- Callers: 25 files, e.g. `asm/overlay_135_021F4580.s`, `asm/overlay_099_021B95A0.s`,
+  `asm/unk_0201FC1C.s`, `asm/unk_0200F150.s`, `asm/unk_0200D3A4.s`.
+- Dry-run carve: file 78 lines before, 55 lines after → new `asm/unk_02008534.s`.
+- Risk: none beyond picking the return type. Strong first candidate.
+
+### Candidate B — `FUN_02008534` (field read, 16-bit truncated)
+
+- Address: 0x02008534, body `ldr r0, [r0, #0x10]; lsl r0, #16; lsr r0, #16; bx lr`.
+- Reads the same 0x10 field as A and truncates to `u16`, i.e. `return *(u16 *)(obj + 0x10);`
+  in C. The `lsl/lsr` pair is exactly how MWCC truncates a load to `u16`.
+- Callers: 6 files, incl. `asm/unk_0201FC1C.s`, `asm/overlay_107_021EE740.s`,
+  `asm/overlay_137_021DC860.s`.
+- Dry-run carve: 84 before, 47 after → new `asm/unk_0200853C.s`.
+- Note: because the original was likely a `u16` load, check whether MWCC emits
+  `ldrh` (which the disassembler would have printed) — it did not, so the C must
+  be a `u32`-typed field narrowed by assignment, e.g. `return (u16)*(u32 *)...;`
+  Verify against the emitted bytes rather than guessing.
+
+### Candidate C — `FUN_02008550` (field read, `u8`, at 0x1D)
+
+- Address: 0x02008550, body `ldrb r0, [r0, #0x1d]; bx lr`.
+- Callers: `asm/overlay_135_021F4580.s` (lines 849, 7525), `asm/unk_0201FC1C.s` (line 9300).
+- Dry-run carve: 100 before, 33 after → new `asm/unk_02008554.s`.
+- Sibling of the already-decompiled `FUN_02008574` setter pair; a natural
+  companion commit.
+
+### Candidate D — `FUN_02008560` (field write, `u8`, at 0x1B)
+
+- Address: 0x02008560, body `strb r1, [r0, #0x1b]; bx lr`.
+- Suggested C: `void FUN_02008560(void *obj, u8 v) { *(u8 *)((u8 *)obj + 0x1B) = v; }`
+- Called from `FUN_020084A0` inside `asm/unk_02008468.s` itself (`mov r1, #0x15; bl FUN_02008560`)
+  and from `asm/overlay_135_021F4580.s` line 5458.
+- Dry-run carve: 114 before, 17 after → new `asm/unk_02008568.s`.
+- Risk: the in-file caller `FUN_020084A0` stays in assembly and calls the new C
+  object via `bl`, which is relocatable across objects — the exact case the
+  contributor docs say carves must allow.
+
+### Candidate E — `FUN_02008568` / `FUN_0200856C` / `FUN_02008570` (write/read pair trio)
+
+- Addresses 0x02008568 (`strb r1, [r0, #0x1a]`), 0x0200856C (`ldrb r0, [r0, #0x18]`),
+  0x02008570 (`ldrb r0, [r0, #0x19]`) — the accessors matching `FUN_02008574`'s
+  two stores exactly.
+- 0x0200856C and 0x02008570 have 12 and 13 caller files respectively
+  (`asm/unk_0201FC1C.s`, `asm/overlay_120_021D4240.s`, `asm/overlay_177_021E5440.s`, …).
+- Dry-run carves, all accepted: 0x02008568 → new `asm/unk_0200856C.s` (122 before,
+  11 after); 0x0200856C → new `asm/unk_02008570.s` (128 before, 5 after);
+  0x02008570 leaves a 0-line lower half (134 before, 0 after, written as
+  `asm/unk_02008468_b.s`) — check how the script names an empty tail before
+  taking this one, since a zero-line assembly object is a different edge case
+  than the other candidates.
+
+### Not recommended as first work
+
+- `FUN_02008500` — a tail-call thunk (`bx` through a loaded address with register
+  shuffling). Fine later as a one-liner, but the reorder-around-`bx` is a bad
+  first lesson in what makes MWCC codegen match. Dry-run accepts it (64 before,
+  61 after → `asm/unk_02008530.s`).
+- `FUN_0200846C` — has `lsl/lsr` pair, a stack word, a `blx` to `Heap_AllocDebug`
+  and a call to `FUN_020084A0`. Good second target once accessors are routine,
+  not a first one.
+- Anything in `asm/battle_*.s` — those files are grouped aggregates, so a carve
+  splits a large object and the surrounding layout is harder to reason about.
+
+## 4. Suggested order of work
+
+1. Obtain the CodeWarrior drop, TWL-SDK 5.3, and arm-none-eabi binutils
+   (INSTALL.md steps 1–3). `baserom.nds` is only needed for the granular
+   `extract`/`compare-*` targets, not for `make`/`make compare`.
+2. Get `make check-toolchain` and `make compare-arm9` printing `MATCH`. Record
+   the exact commit that reproduces; that is the baseline this backlog is only
+   valid against.
+3. Convert Candidate A (`FUN_02008530`) in its own commit. Verify.
+4. Convert C, D, then the E trio, each in its own commit, each verified with
+   `make && make compare-arm9` before moving on.
+5. Only then consider the thunk and the allocator call sites.
+6. Keep renames separate from decompilation, and update
+   `ndsdisasm_config/arm9_config.cfg` in the same commit as any rename
+   (`FUN_02008568` is at `ndsdisasm_config/arm9_config.cfg:152`).
+
+## 5. What this document deliberately does not do
+
+- No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
+  untouched at the time of writing.
+- No C was written for any candidate, because none can be verified without the
+  compiler, and unverified C in a matching repo is worse than no C.
+- No upstream pull request was prepared, and none is contemplated under this
+  branch.
