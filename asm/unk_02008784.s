@@ -6,17 +6,6 @@
 	.extern MI_CpuFill8
 
 	.text
-	thumb_func_start FUN_02008774
-FUN_02008774: ; 0x02008774
-	push {r3, lr}
-	mov r1, #0x1b
-	bl FUN_020071CC
-	mov r1, #0
-	add r0, #0x2c
-	strb r1, [r0]
-	pop {r3, pc}
-	thumb_func_end FUN_02008774
-
 	thumb_func_start FUN_02008784
 FUN_02008784: ; 0x02008784
 	push {r4, lr}
