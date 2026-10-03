@@ -86,6 +86,8 @@ Static main
 	Object		asm/unk_0200E024.o
 	Object		src/unk_0200e090.o
 	Object		asm/unk_0200E0BC.o
+	Object		src/unk_0200E3A0.o
+	Object		asm/unk_0200E3A4.o
 	Object		src/unk_0200E44C.o
 	Object		asm/unk_0200E460.o
 	Object		asm/unk_0200E4CC.o
