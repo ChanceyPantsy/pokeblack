@@ -342,6 +342,48 @@ helpers) were left in assembly: the first pair need a struct view this batch
 declines to invent, and the second do not reduce to plausible C without the
 same.
 
+### Parallel lane B — seventh batch (`ai/space-bunny-parallel-b`)
+
+Continued into `asm/unk_0200A480.s` from the fifth-batch tip (`e16fb0f`). Baseline
+re-verified first: `make check-toolchain` OK, 7/7 carve regression tests OK,
+`make compare-arm9` MATCH, `make compare` byte-identical. Seven functions
+converted, one commit each, `compare-arm9` MATCH after every one.
+
+| Function | C | Verified |
+| --- | --- | --- |
+| `FUN_0200a638` | `return 1` | MATCH, `ROM matches` |
+| `FUN_0200A5F8` | `FUN_020071CC(obj, 0x2a)` | MATCH, `ROM matches` |
+| `FUN_0200A7EC` | `((u8 *)obj)[0x29E] = value` | MATCH, `ROM matches` |
+| `FUN_0200A864` | `FUN_020071CC(obj, 0x2b)` | MATCH, `ROM matches` |
+| `FUN_0200A870` | `MI_CpuCopy8(arg1, arg0, 0x1E8)` | MATCH, `ROM matches` |
+| `FUN_0200A884` | `MI_CpuCopy8(src, dest, 0x1E8)` | MATCH, `ROM matches` |
+| `FUN_0200ad7c` | `FUN_02082AC0(0, dest, 0xF8)` | MATCH, `ROM matches` |
+
+One new header, `include/unk_02082AC0.h`, declares the SDK memset under the
+address this disassembly knows it by. Its parameter order is
+`(data, dest, size)` — byte first, destination second — which is not the order
+`include/mi_memory.h` declares `MI_CpuFill8` in, and that difference is exactly
+what the `FUN_0200ad7c` thunk's `add r1, r0, #0` encodes. Declaring it with the
+`mi_memory.h` order produced a 2-byte-shorter object and a whole-ROM shift; the
+header comment records the order so the next lane does not repeat it.
+
+### A carve candidate that is not a candidate: `FUN_0200a5a4`
+
+`FUN_0200a5a4` is declared with `arm_func_start`/`arm_func_end` and an **empty
+body**; the bytes that follow `_0200A5A4:` belong to the next function. The
+carve accepted it, but converting it emitted 4 bytes where the original
+contributed 0, so the ARM9 came back 4 bytes long and every following address
+shifted — the same signature as the `FUN_02008560` pool bug in section 4a.
+`carve_function.py` rejects a function whose `func_end` is its own `func_start`
+(both non-word-aligned and `arm_func_start` empty-body cases are visible in the
+disassembly and neither is convertible). Reverted; the seven functions above
+replace it in the count.
+
+Left in assembly, as before: `FUN_0200A480` / `FUN_0200A4B8` (the multi-call
+`FUN_020071CC`-pair setup routine and its `MI_CpuFill8`/`FUN_0203F2FC` tail), and
+the `FUN_0200AB50`–`FUN_0200ad30` bank, which are the 0x1C-stride record-array
+sort/memmove helpers and need a struct view this batch declines to invent.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
