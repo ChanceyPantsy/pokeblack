@@ -52,11 +52,3 @@ FUN_02012944: ; 0x02012944
 	thumb_func_end FUN_02012944
 _02012950:
 	.byte 0x44, 0x22, 0x24, 0x30
-
-	thumb_func_start FUN_02012954
-FUN_02012954: ; 0x02012954
-	mul r2, r1
-	add r0, r0, r2
-	bx lr
-	.balign 4, 0
-	thumb_func_end FUN_02012954
