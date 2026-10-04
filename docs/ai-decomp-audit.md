@@ -379,6 +379,45 @@ halfword load at `0x98`. `FUN_02008ad8`, `FUN_02008f34`, `FUN_0200904c` and the
 other mid-stream splits in this bank are not function starts and were not
 touched. Unknown names preserved throughout; no renames.
 
+### Parallel lane S (`ai/space-bunny-parallel-s`, 0x02012704–0x02012CE0)
+
+| Function | C form | Verified |
+| --- | --- | --- |
+| `FUN_02012AA0` | `return obj + 4` | MATCH |
+| `FUN_020127A4` | `return obj + 0x114` | MATCH |
+| `FUN_020127AC` | `return obj + 0x1D4 + arg2 * 0x10` | MATCH |
+| `FUN_020127D0` | `return obj + 0x214 + arg2 * 0x1E8` | MATCH |
+| `FUN_02012924` | `return *(u32 *)(obj + 0x18C)` | MATCH |
+| `FUN_0201292C` | `return *(u32 *)(obj + 0x190)` | MATCH |
+| `FUN_02012934` | `return *(u32 *)(obj + 0x194)` | MATCH |
+| `FUN_02012954` | `return obj + arg2 * arg3` | MATCH |
+| `FUN_0201295C` | `return *(u32 *)(obj + 0x1A4)` | MATCH |
+| `FUN_02012964` | `return *(u32 *)(obj + 0x1A8)` | MATCH |
+| `FUN_0201296C` | `return *(u32 *)(obj + 0x1AC)` | MATCH |
+| `FUN_02012A24` | `return *(u8 *)(obj + 0x1C9)` | MATCH |
+| `FUN_02012A30` | `return *(u32 *)(obj + 0x1B4)` | MATCH |
+| `FUN_02012B28` | `return *(u32 *)(obj + 0x40)` | MATCH |
+
+All 14 verified with `compare-arm9 MATCH` immediately after the individual
+commit, then `make check-toolchain` (frozen canary OK), the seven
+`tools/scripts/tests` unit tests, and a full `make` producing
+`ROM matches black.us/rom.sha1` at 268,435,456 bytes.
+
+Two typing rules this bank forced. A `void *` accessor needs the explicit
+`(void *)(*(u32 *)...)` cast — returning `*(u32 *)...` directly is an illegal
+implicit conversion under `-W error`. Conversely `FUN_02012AC8`, `FUN_02012944`
+and `FUN_02012984` were carved, found non-matching, and fully reverted: the
+compiler emits a prologue that shifts every later address, so the whole ARM9
+went to 22% match. `tools/scripts/cmp_bytes.py` (added here) prints built
+versus original bytes at an address, which is how those three were diagnosed.
+
+Toolchain note for fresh worktrees: `tools/mwccarm/dsi/1.1/`, `lib/NitroSDK`
+and `baserom.nds` are not tracked by git, so a new worktree has only the
+wrapper scripts. Copy the `.exe`/`.dll` set in from the primary checkout, symlink
+`lib/NitroSDK` and `baserom.nds`, build `tools/mwasmarm_patcher` with its
+Makefile, and seed `build/black.us/extracted/arm9_decompressed.bin` (ndsdisasm
+is not in the tree either). Only then does `compare-arm9` run.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
