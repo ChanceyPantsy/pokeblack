@@ -1,0 +1,89 @@
+	.include "asm/macros/function.inc"
+
+	.extern FUN_02006E64
+	.extern FUN_020071CC
+	.extern FUN_020071e4
+	.extern FUN_02007AC8
+	.extern FUN_02008448
+	.extern FUN_0200863C
+	.extern FUN_02008748
+	.extern FUN_02008808
+	.extern FUN_02008850
+	.extern FUN_020088B8
+	.extern FUN_0200893C
+	.extern FUN_02008954
+	.extern FUN_02008964
+	.extern FUN_020097F0
+	.extern FUN_02009D08
+	.extern FUN_0200A864
+	.extern FUN_0200A884
+	.extern FUN_0200B3C8
+	.extern FUN_0200BE6C
+	.extern FUN_0200C40C
+	.extern FUN_0200C418
+	.extern FUN_0200E89C
+	.extern FUN_0200EEAC
+	.extern FUN_020127A4
+	.extern FUN_02012EBC
+	.extern FUN_02027584
+	.extern FUN_0202889C
+	.extern FUN_0202E794
+	.extern FUN_02159BBC
+	.extern FUN_0215E334
+	.extern FUN_02161D64
+	.extern FUN_021623BC
+	.extern FUN_021647D8
+	.extern FUN_0216CCB0
+	.extern Heap_Free
+	.extern MI_CpuCopy8
+
+	.text
+	thumb_func_start FUN_02012A30
+FUN_02012A30: ; 0x02012A30
+	mov r1, #0x6d
+	lsl r1, r1, #2
+	ldr r0, [r0, r1]
+	bx lr
+	thumb_func_end FUN_02012A30
+_02012A38:
+	.byte 0x01, 0x49, 0x40, 0x58, 0x70, 0x47, 0xC0, 0x46
+	.byte 0xE4, 0x05, 0x00, 0x00, 0x6F, 0x21, 0x89, 0x00, 0x40, 0x58, 0x70, 0x47, 0x6F, 0x22
+
+	non_word_aligned_thumb_func_start FUN_02012a4e
+FUN_02012a4e: ; 0x02012A4E
+	lsl r2, r2, #2
+	str r1, [r0, r2]
+	bx lr
+	thumb_func_end FUN_02012a4e
+_02012A54:
+	.byte 0x01, 0x49, 0x40, 0x58, 0x70, 0x47, 0xC0, 0x46, 0x8C, 0x06, 0x00, 0x00
+
+	thumb_func_start FUN_02012A60
+FUN_02012A60: ; 0x02012A60
+	add r1, r0, #0
+	mov r2, #0
+	add r1, #0x3d
+	strb r2, [r1]
+	add r1, r0, #0
+	add r1, #0x3a
+	strb r2, [r1]
+	ldr r1, _02012A8C ; =0x0000FFFF
+	strh r2, [r0]
+	str r2, [r0, #4]
+	str r2, [r0, #8]
+	str r2, [r0, #0xc]
+	strh r2, [r0, #0x18]
+	strb r2, [r0, #0x1b]
+	str r2, [r0, #0x30]
+	strb r2, [r0, #0x12]
+	strb r2, [r0, #0x13]
+	strh r2, [r0, #0x10]
+	strh r2, [r0, #0x16]
+	strh r2, [r0, #0x14]
+	strh r1, [r0, #0x1c]
+	bx lr
+	.balign 4, 0
+_02012A8C: .word 0x0000FFFF
+	thumb_func_end FUN_02012A60
+_02012A90:
+	.byte 0x0B, 0x1C, 0x02, 0x1D, 0x03, 0xCB, 0x03, 0xC2, 0x18, 0x68, 0x10, 0x60, 0x70, 0x47, 0x00, 0x00
