@@ -114,6 +114,11 @@ Static main
 	Object		src/unk_02014464.o
 	Object		src/unk_02014468.o
 	Object		src/FUN_0201446C.o
+	Object		src/unk_02014470.o
+	Object		src/unk_02014474.o
+	Object		src/unk_02014478.o
+	Object		src/unk_0201447C.o
+	Object		src/unk_02014484.o
 	Object		asm/unk_0201446C.o
 	Object		asm/unk_020147DC.o
 	Object		asm/unk_02015580.o
