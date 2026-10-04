@@ -33,18 +33,6 @@
 
 	.text
 
-	thumb_func_start FUN_02013270
-FUN_02013270: ; 0x02013270
-	push {r4, lr}
-	add r4, r0, #0
-	ldr r0, [r4, #0x14]
-	.hword 0xF032, 0xEAC8 ; blx FUN_02045808
-	add r0, r4, #0
-	blx Heap_Free
-	pop {r4, pc}
-	.balign 4, 0
-	thumb_func_end FUN_02013270
-
 	thumb_func_start FUN_02013284
 FUN_02013284: ; 0x02013284
 	push {r3, r4, r5, r6, r7, lr}
