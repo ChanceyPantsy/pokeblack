@@ -38,14 +38,6 @@
 	.extern MI_CpuCopy8
 
 	.text
-	thumb_func_start FUN_02012964
-FUN_02012964: ; 0x02012964
-	mov r1, #0x6a
-	lsl r1, r1, #2
-	ldr r0, [r0, r1]
-	bx lr
-	thumb_func_end FUN_02012964
-
 	thumb_func_start FUN_0201296C
 FUN_0201296C: ; 0x0201296C
 	mov r1, #0x6b
