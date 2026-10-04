@@ -3,6 +3,6 @@
 
 #include "types.h"
 
-void FUN_02013144(void *obj, u16 value);
+void FUN_02013144(void *obj, u32 value);
 
 #endif
