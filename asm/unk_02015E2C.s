@@ -16,45 +16,6 @@
 	.extern Heap_Free
 
 	.text
-	thumb_func_start FUN_02015BA4
-FUN_02015BA4: ; 0x02015BA4
-	push {r3, r4, r5, lr}
-	add r4, r1, #0
-	add r5, r0, #0
-	add r0, r4, #0
-	bl FUN_02016BA0
-	ldr r0, [r4]
-	cmp r0, #0
-	beq _02015BBE
-	bl FUN_02016C0C
-	mov r0, #0
-	str r0, [r4]
-_02015BBE:
-	ldr r0, [r4, #4]
-	cmp r0, #0
-	beq _02015BCC
-	bl FUN_02016C38
-	mov r0, #0
-	str r0, [r4, #4]
-_02015BCC:
-	ldr r0, [r4, #8]
-	cmp r0, #0
-	beq _02015BDA
-	bl FUN_02016C38
-	mov r0, #0
-	str r0, [r4, #8]
-_02015BDA:
-	mov r0, #0x52
-	lsl r0, r0, #2
-	ldr r0, [r4, r0]
-	ldr r1, [r5, #0x14]
-	mov r2, #0
-	lsl r0, r0, #2
-	str r2, [r1, r0]
-	add r0, r4, #0
-	.hword 0xF01A, 0xEDE2 ; blx Heap_Free
-	pop {r3, r4, r5, pc}
-	thumb_func_end FUN_02015BA4
 _02015BF0:
 	.byte 0xC2, 0x6A, 0x01, 0x21, 0x8A, 0x43, 0x01, 0x21, 0x11, 0x43, 0xC1, 0x62, 0x70, 0x47, 0x00, 0x00
 	.byte 0xC2, 0x6A, 0x01, 0x21, 0x8A, 0x43, 0xC2, 0x62, 0x70, 0x47, 0x00, 0x00, 0x05, 0x22, 0x92, 0x01
