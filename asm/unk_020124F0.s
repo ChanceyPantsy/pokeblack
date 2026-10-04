@@ -38,11 +38,6 @@
 	.extern MI_CpuCopy8
 
 	.text
-	thumb_func_start FUN_020124E8
-FUN_020124E8: ; 0x020124E8
-	ldr r0, [r0, #0xc]
-	bx lr
-	thumb_func_end FUN_020124E8
 _020124EC:
 	.byte 0x08, 0x30, 0x70, 0x47
 
