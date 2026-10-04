@@ -1,6 +1,7 @@
 	.include "asm/macros/function.inc"
 
 	.extern FUN_020056A0
+	.extern FUN_02016028
 	.extern FUN_02016630
 	.extern FUN_02016984
 	.extern FUN_02016BA0
@@ -16,42 +17,6 @@
 	.extern Heap_Free
 
 	.text
-_0201601C:
-	.byte 0x00, 0x20, 0x70, 0x47
-	.byte 0x01, 0x63, 0x70, 0x47, 0x41, 0x63, 0x70, 0x47
-
-	thumb_func_start FUN_02016028
-FUN_02016028: ; 0x02016028
-	push {r3, r4, r5, lr}
-	add r5, r0, #0
-	lsl r1, r1, #0x10
-	ldr r0, [r5, #0x28]
-	lsr r1, r1, #0x10
-	.hword 0xF04C, 0xEBD2 ; blx FUN_020627D8
-	add r4, r0, #0
-	add r0, r5, #0
-	add r0, #0x98
-	ldr r0, [r0]
-	cmp r0, #0
-	beq _02016046
-	.hword 0xF01A, 0xEBB6 ; blx Heap_Free
-_02016046:
-	add r0, r5, #0
-	mov r1, #1
-	bl FUN_02016984
-	add r0, r5, #0
-	add r0, #0x34
-	add r1, r4, #0
-	blx FUN_0206469C
-	mov r1, #0x51
-	lsl r1, r1, #2
-	ldr r2, [r5, r1]
-	mov r0, #1
-	bic r2, r0
-	str r2, [r5, r1]
-	pop {r3, r4, r5, pc}
-	.balign 4, 0
-	thumb_func_end FUN_02016028
 _02016068:
 	.byte 0x05, 0x21, 0x89, 0x01, 0x40, 0x58, 0x00, 0x01
 	.byte 0x00, 0x0F, 0x00, 0x06, 0x00, 0x0E, 0x70, 0x47, 0x70, 0xB5, 0x06, 0x1C, 0x05, 0x20, 0x0D, 0x1C
