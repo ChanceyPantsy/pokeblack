@@ -271,37 +271,3 @@ FUN_0201444c: ; 0x0201444C
 	.hword 0x6800 ; mov r0, r0
 	bx lr
 	thumb_func_end FUN_0201444c
-
-	thumb_func_start FUN_02014450
-FUN_02014450: ; 0x02014450
-	str r1, [r0, #0]
-	bx lr
-	thumb_func_end FUN_02014450
-
-	thumb_func_start FUN_02014454
-FUN_02014454: ; 0x02014454
-	strb r1, [r0, #4]
-	bx lr
-	thumb_func_end FUN_02014454
-
-	thumb_func_start FUN_02014458
-FUN_02014458: ; 0x02014458
-	ldrb r0, [r0, #4]
-	bx lr
-	thumb_func_end FUN_02014458
-
-	thumb_func_start FUN_0201445c
-FUN_0201445c: ; 0x0201445C
-	strb r1, [r0, #5]
-	thumb_func_end FUN_0201445c
-
-	non_word_aligned_thumb_func_start FUN_0201445e
-FUN_0201445e: ; 0x0201445E
-	bx lr
-	thumb_func_end FUN_0201445e
-
-	thumb_func_start FUN_02014460
-FUN_02014460: ; 0x02014460
-	ldrb r0, [r0, #5]
-	bx lr
-	thumb_func_end FUN_02014460
