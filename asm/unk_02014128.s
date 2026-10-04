@@ -266,9 +266,30 @@ FUN_02014444: ; 0x02014444
 	.balign 4, 0
 _02014448: .word 0x020307B0 ; was Heap_Free
 	thumb_func_end FUN_02014444
-_0201444C:
-	.byte 0x00, 0x68, 0x70, 0x47
-	.byte 0x01, 0x60, 0x70, 0x47, 0x01, 0x71, 0x70, 0x47, 0x00, 0x79, 0x70, 0x47
+
+	thumb_func_start FUN_0201444c
+FUN_0201444c: ; 0x0201444C
+	.hword 0x6800 ; mov r0, r0
+	bx lr
+	thumb_func_end FUN_0201444c
+
+	thumb_func_start FUN_02014450
+FUN_02014450: ; 0x02014450
+	str r1, [r0, #0]
+	bx lr
+	thumb_func_end FUN_02014450
+
+	thumb_func_start FUN_02014454
+FUN_02014454: ; 0x02014454
+	strb r1, [r0, #4]
+	bx lr
+	thumb_func_end FUN_02014454
+
+	thumb_func_start FUN_02014458
+FUN_02014458: ; 0x02014458
+	ldrb r0, [r0, #4]
+	bx lr
+	thumb_func_end FUN_02014458
 
 	thumb_func_start FUN_0201445c
 FUN_0201445c: ; 0x0201445C
@@ -279,8 +300,12 @@ FUN_0201445c: ; 0x0201445C
 FUN_0201445e: ; 0x0201445E
 	bx lr
 	thumb_func_end FUN_0201445e
-_02014460:
-	.byte 0x40, 0x79, 0x70, 0x47
+
+	thumb_func_start FUN_02014460
+FUN_02014460: ; 0x02014460
+	ldrb r0, [r0, #5]
+	bx lr
+	thumb_func_end FUN_02014460
 
 	thumb_func_start FUN_02014464
 FUN_02014464: ; 0x02014464
@@ -293,11 +318,46 @@ FUN_02014468: ; 0x02014468
 	ldrb r0, [r0, #6]
 	bx lr
 	thumb_func_end FUN_02014468
-_0201446C:
-	.byte 0x01, 0x81, 0x70, 0x47
-	.byte 0x00, 0x89, 0x70, 0x47, 0x41, 0x82, 0x70, 0x47, 0x40, 0x8A, 0x70, 0x47, 0x42, 0x7C, 0x41, 0x74
-	.byte 0x10, 0x1C, 0x70, 0x47, 0x40, 0x7C, 0x70, 0x47, 0xF8, 0xB5, 0x14, 0x1C, 0xA0, 0x68, 0x0D, 0x1C
-	.byte 0x27, 0x68, 0x66, 0x68
+
+	thumb_func_start FUN_0201446c
+FUN_0201446c: ; 0x0201446C
+	strh r1, [r0, #8]
+	bx lr
+	thumb_func_end FUN_0201446c
+
+	thumb_func_start FUN_02014470
+FUN_02014470: ; 0x02014470
+	ldrh r0, [r0, #8]
+	bx lr
+	thumb_func_end FUN_02014470
+
+	thumb_func_start FUN_02014474
+FUN_02014474: ; 0x02014474
+	strh r1, [r0, #18]
+	bx lr
+	thumb_func_end FUN_02014474
+
+	thumb_func_start FUN_02014478
+FUN_02014478: ; 0x02014478
+	ldrh r0, [r0, #18]
+	bx lr
+	thumb_func_end FUN_02014478
+
+	thumb_func_start FUN_0201447c
+FUN_0201447c: ; 0x0201447C
+	ldrb r2, [r0, #17]
+	strb r1, [r0, #17]
+	mov r0, r2
+	bx lr
+	thumb_func_end FUN_0201447c
+
+	thumb_func_start FUN_02014484
+FUN_02014484: ; 0x02014484
+	ldrb r0, [r0, #17]
+	bx lr
+	thumb_func_end FUN_02014484
+_02014488:
+	.byte 0xF8, 0xB5, 0x14, 0x1C, 0xA0, 0x68, 0x0D, 0x1C, 0x27, 0x68, 0x66, 0x68
 
 	thumb_func_start FUN_02014494
 FUN_02014494: ; 0x02014494
