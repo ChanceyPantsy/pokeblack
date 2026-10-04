@@ -379,6 +379,50 @@ halfword load at `0x98`. `FUN_02008ad8`, `FUN_02008f34`, `FUN_0200904c` and the
 other mid-stream splits in this bank are not function starts and were not
 touched. Unknown names preserved throughout; no renames.
 
+### Seventh batch (lane T, 0x02012CE0 / 0x02013270 cluster)
+
+Lane T worked the `0x02012CE0` unit and the adjacent `0x0201320C`–`0x02013270`
+band. Three conversions landed, one commit each, `compare-arm9` MATCH after
+every one.
+
+| Function | C | Verified |
+| --- | --- | --- |
+| `FUN_0201320C` | zero-fills the struct, `+0` set to `9` | MATCH, `ROM matches` |
+| `FUN_02013220` | same field clears, `+0xc` set to `0xa` | MATCH, `ROM matches` |
+| `FUN_02013270` | `FUN_02045808(*(void **)(obj + 0x14)); Heap_Free(obj);` | MATCH, `ROM matches` |
+
+`FUN_0201320C` and `FUN_02013220` are field-clear loops whose *emission order*
+is load-bearing: the original stores `+0x9` last, after `+0xd`, and reordering
+the assignments — which is what a field-declaration-ordered rewrite naturally
+produces — changes the byte stream and breaks the match. Writing the stores in
+the original order is required, not cosmetic.
+
+`FUN_02013270` needed one new header (`include/unk_02045808.h`) for the
+`blx`-called member-release helper. `FUN_02013220` living in the same `.byte`
+carve as `FUN_02013234` required renaming the residual assembly file to
+`asm/unk_02013234.s` so both objects stay linked in order; the C file alone does
+not replace the assembly unit.
+
+Rejected and fully reverted: `FUN_0201333C` (a four-call wrapper whose
+parameter-save order is `r1→r4, r0→r5`; the compiler emits `r0→r4, r1→r5` and
+neither a local temporary nor a `u8 *` alias of `obj` shifts it, so the whole
+function is 8 bytes long and everything after it shifts).
+
+### Eighth batch attempt (lane T, `asm/unk_02012CE0.s` proper)
+
+No conversions. The disassembly in `asm/unk_02012CE0.s` is only partly
+resolved: past `FUN_02012CE0` the unit falls into raw `.byte` dumps that are
+*not* disassembled, so the functions there (`FUN_02012d3c`, `FUN_02012e06`,
+`FUN_02012e4a`, the tail at `_02012DAC`) have no authoritative instruction
+listing to work from. Writing C for them would mean inventing the
+disassembly, which is exactly what this project forbids; lane T declined to
+guess and left the file byte-for-byte untouched.
+
+`compare-overlays` could not run in this worktree: `tools/ndstool/ndstool` is
+absent (INSTALL.md step 5). This is a pre-existing toolchain gap, not a
+regression — `compare-arm9`, `check-toolchain` and a full byte-identical
+`compare-rom` all pass.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
