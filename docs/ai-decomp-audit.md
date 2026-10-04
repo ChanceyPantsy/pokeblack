@@ -379,6 +379,53 @@ halfword load at `0x98`. `FUN_02008ad8`, `FUN_02008f34`, `FUN_0200904c` and the
 other mid-stream splits in this bank are not function starts and were not
 touched. Unknown names preserved throughout; no renames.
 
+### Lane X batch (0x02014CB8 / 0x02014CD4 in `asm/unk_020147DC.s`)
+
+Parallel lane on its own worktree, one logical commit per conversion,
+`compare-arm9` MATCH after every one.
+
+| Function | C | Verified |
+| --- | --- | --- |
+| `FUN_02014CB8` | lazy-init: `*(void **)arg0 = FUN_020490F4(arg1, (u16)*(u32 *)((u8 *)arg0 + 0x40))` | MATCH, `ROM matches` |
+| `FUN_02014CD4` | conditional teardown of the two head pointers | MATCH, `ROM matches` |
+
+Both were recovered by disassembling a byte pool by hand first (a separate
+commit, verified byte-identical before any C was written) — the pool held two
+real functions that ndsdisasm had left as `.byte` data.
+
+`FUN_02014CB8` only matches when the field read is `(u16)*(u32 *)` rather than
+`*(u16 *)`; the original loads a word and masks it down, so the narrowing load
+emits a different instruction pair.
+
+**This cluster does not yield 6–10 conversions.** `asm/unk_020147DC.s` is 1465
+lines but carries only ~29 `func_start` markers: from 0x02014808 to 0x0201555C
+it is one large function that ndsdisasm split into ~20 `non_word_aligned`
+fragments (`FUN_02015152`, `FUN_02015224`/`278`/`f4`, `FUN_02015332`,
+`FUN_020154b4`/`c0`/`c8`, `FUN_0201551c`, `thunk_FUN_020155ee`, …). Those have
+no prologue, share stack slots and fall through into each other, so they are not
+independently expressible in C. Rejected candidates, each fully reverted:
+
+- `FUN_02014BA8` — its `beq` targets 0x02014BDA inside `FUN_02014bba`'s body and
+  the trailing `pop` is shared, so the carve crosses the object boundary.
+- `FUN_02014808` / `FUN_02014830` — the two struct-init constructors referenced
+  from eight overlay files. Both load a PC-relative literal 0x02014759 that lives
+  in the byte pool of `asm/unk_02014128.s`, with no named symbol to declare, so
+  the carve would strand the `ldr r2, [pc, #40]`. Needs a data-side split first.
+- `FUN_02014C08`, `FUN_02014B08`, the `FUN_02014D2C` region — large frames with
+  repeated dead `movs`/`lsls`/`subs` pairs that no plausible C reproduces.
+- `_02014CEA` / `_02014CF0` — not function boundaries; that data is the tail of
+  the preceding function plus bytes consumed by `arm_func_start FUN_02014cf4`,
+  which the disassembler mis-split.
+
+Two toolchain/build pitfalls worth carrying to other lanes:
+
+1. A byte pool that directly follows a carved C function must be **short by the
+   linker's 2-byte alignment pad**. Keeping the original pool verbatim shifts
+   every following address by 4 — the signature is a first divergence at
+   0x02004980 (far before the carve site) and tens of thousands of diff runs.
+2. `blx` to a 4-mod-4 target needs an explicit `.hword` pair; the assembler's
+   `blx` picks a different encoding.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
