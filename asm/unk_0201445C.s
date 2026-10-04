@@ -30,9 +30,3 @@ FUN_0201445c: ; 0x0201445C
 FUN_0201445e: ; 0x0201445E
 	bx lr
 	thumb_func_end FUN_0201445e
-
-	thumb_func_start FUN_02014460
-FUN_02014460: ; 0x02014460
-	ldrb r0, [r0, #5]
-	bx lr
-	thumb_func_end FUN_02014460
