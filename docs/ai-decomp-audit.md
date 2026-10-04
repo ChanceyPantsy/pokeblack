@@ -379,6 +379,44 @@ halfword load at `0x98`. `FUN_02008ad8`, `FUN_02008f34`, `FUN_0200904c` and the
 other mid-stream splits in this bank are not function starts and were not
 touched. Unknown names preserved throughout; no renames.
 
+### Lane Z batch — `asm/unk_02015BA4.s` cluster
+
+Continued into the 0x02015BA4 / 0x02016018–0x02016394 band. Six functions
+converted, one logical commit each, `compare-arm9` MATCH after every one.
+
+| Function | C | Verified |
+| --- | --- | --- |
+| `FUN_02016018` | constant `1` | MATCH, `ROM matches` |
+| `FUN_02016028` | frees a member, three call sites, clears a flag bit | MATCH, `ROM matches` |
+| `FUN_02015ea4` | `*ptr \|= 2 << 10` at a caller-supplied offset | MATCH, `ROM matches` |
+| `FUN_02015BA4` | nulls three pointers, clears a table slot, frees | MATCH, `ROM matches` |
+| `FUN_02016374` | tail call `FUN_02064CBC(arg0 + 0x34)` | MATCH, `ROM matches` |
+| `FUN_02016394` | sets bit 30 from an argument, preserves the rest | MATCH, `ROM matches` |
+
+Two carve-tool interactions worth recording for the next lane. When the
+carved function is the *first* thing in its file, the leftover upper half keeps
+the old filename while the C object takes the same base name; `makelcf` strips
+directories, so `main.lsf` ends up with two identical entries, the linker loads
+the same file twice, and the C is silently never placed. The symptom is a
+`compare-arm9` failure whose diff starts near the top of the ROM rather than at
+the function, which reads like link corruption. Fixed by renaming the leftover
+after its own first label (`asm/unk_02016394.s` → `asm/unk_02016380.s`, and
+likewise for the 0x0201601C and 0x02016028 leftovers) and updating `main.lsf`.
+
+Two codegen notes. A field passed *by address* is a C array member
+(`u8 unk_34[0x64]`), not a pointer — a pointer member compiles to a direct
+`ldr rN, [r5, #imm]` where the original has an `add` pair. And `FUN_02015ea4`
+only matches with the offset as the *third* parameter: the original clobbers
+`r1` for the constant before touching the index, so the index is `r2`, not the
+second argument register.
+
+The remaining `thumb_func_start` labels in this bank are not function starts:
+`FUN_02015e2c` begins mid-prologue and pops registers it never pushed,
+`FUN_02015e46` / `FUN_020163b6` are non-word-aligned, `FUN_02015ed4` and
+`FUN_020165f8` are branch fragments whose target lies in the preceding block,
+and `FUN_020163C4` / `thunk_FUN_02016c00` are large enough to need work
+beyond this lane's budget. All were left in assembly.
+
 ## 5. What this document deliberately does not do
 
 - No disassembly was carved or edited; `asm/` and `ndsdisasm_config/` are
