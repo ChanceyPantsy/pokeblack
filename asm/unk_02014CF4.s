@@ -27,22 +27,8 @@
 	.extern Heap_Free
 
 	.text
-	thumb_func_start FUN_02014CD4
-FUN_02014CD4: ; 0x02014CD4
-	push {r4, lr}
-	add r4, r0, #0
-	ldr r0, [r4]
-	cmp r0, #0
-	beq _02014CE8
-	blx FUN_02049238
-	mov r0, #0
-	str r0, [r4, #4]
-	str r0, [r4]
-_02014CE8:
-	pop {r4, pc}
-	thumb_func_end FUN_02014CD4
 _02014CEA:
-	.byte 0x00, 0x00, 0x81, 0x60, 0x70, 0x47, 0x81, 0x63, 0xC2, 0x63
+	.byte 0x81, 0x60, 0x70, 0x47, 0x81, 0x63, 0xC2, 0x63
 
 	arm_func_start FUN_02014cf4
 FUN_02014cf4: ; 0x02014CF4
