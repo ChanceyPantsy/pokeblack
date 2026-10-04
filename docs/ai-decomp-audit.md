@@ -388,3 +388,33 @@ touched. Unknown names preserved throughout; no renames.
   byte-identical ROM build.
 - No upstream pull request was prepared, and none is contemplated under this
   branch.
+## 6. Lane AA — unk_02016630 cluster
+
+Two functions converted out of `asm/unk_02016630.s`, one logical commit each,
+`compare-arm9` MATCH after every one:
+
+- `FUN_020169D4` (commit 991d44b) — two `volatile u32` writes to `0x040004C0`.
+- `FUN_02016984` (commit 55f5d61) — one `Heap_AllocDebug` plus a six-argument
+  tail call. Needed explicit `u8 unk_14[4]` style filler fields between the
+  pointer members: declaring the members as adjacent pointers made the
+  compiler pack them at 4-byte strides and every later `#imm` shifted by 8.
+
+The cluster is mostly not convertible. What is left in the file:
+
+- `FUN_02016630` is a real function but spans `0x02016630..0x02016868`, and the
+  disassembler emitted its middle as two `.byte` blobs at `_02016742` and
+  `_02016880`. `carve_function.py` cuts at `thumb_func_end`, so it splits this
+  function and leaves a `.byte` blob as the new file's first label — the
+  leftover assembles as raw data and `mwldarm` rejects the `pop` opcode. The
+  carve has to be done by hand for a function this shape.
+- `FUN_0201689a`, `FUN_020168ba` and `FUN_020168c0` are one function split by the
+  disassembler across two non-word-aligned starts; `FUN_020168c0` starts on a
+  `str r6, [r4, #0x10]` that pops registers it never pushed.
+- The `.byte` blob at `_02016918` holds two more real functions
+  (`FUN_0201691c`, and the `0x02016984` slot already converted) that the
+  disassembler never labelled as starts.
+
+Toolchain note for this checkout: `make compare-all` stops at
+`compare-overlays` because `tools/ndstool/ndstool` is absent. That is a
+provisioning gap, not a build regression — `check-toolchain`, `main.sha1` and
+`compare-arm9` all pass, and the full ROM build is byte-identical.
