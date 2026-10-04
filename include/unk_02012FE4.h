@@ -3,6 +3,6 @@
 
 #include "types.h"
 
-void FUN_02012FE4(void *obj);
+void *FUN_02012FE4(void *obj);
 
 #endif

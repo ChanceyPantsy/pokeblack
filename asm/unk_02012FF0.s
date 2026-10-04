@@ -30,19 +30,6 @@
 	.extern MI_CpuFill8
 
 	.text
-_02012FD8:
-	.byte 0x00, 0x68, 0x01, 0x4B, 0x43, 0x21, 0x18, 0x47
-	.byte 0xCD, 0x71, 0x00, 0x02
-
-	thumb_func_start FUN_02012FE4
-FUN_02012FE4: ; 0x02012FE4
-	ldr r3, _02012FEC ; =FUN_020071CC
-	mov r1, #0x2d
-	bx r3
-	nop
-_02012FEC: .word 0x020071CD ; was FUN_020071CC
-	thumb_func_end FUN_02012FE4
-
 	thumb_func_start FUN_02012ff0
 FUN_02012ff0: ; 0x02012FF0
 	ldr r1, _02012FF8 ; =0x020A7298
